@@ -3,6 +3,15 @@
 #include <stdlib.h>
 #include <string.h>
 
+#define FILENAME_SIZE 256
+
+// Функция для чтения строки
+void readLine(char *buffer, size_t size) {
+  if (fgets(buffer, size, stdin)) {
+    buffer[strcspn(buffer, "\n")] = '\0';
+  }
+}
+
 void printMenu() {
   printf("\n=== Menu ===\n");
   printf("1. Print database\n");
@@ -11,8 +20,8 @@ void printMenu() {
   printf("4. Save database\n");
   printf("5. Load database\n");
   printf("6. Sort database\n");
-  printf("7. Display bar chart (Value)\n");
-  printf("8. Display pie chart (Value)\n");
+  // printf("7. Display bar chart (Value)\n");
+  // printf("8. Display pie chart (Value)\n");
   printf("9. Exit\n");
   printf("Choose an option: ");
 }
@@ -20,58 +29,57 @@ void printMenu() {
 int main(int argc, char *argv[]) {
   Database db;
   initDatabase(&db);
-  char filename[256];
+  char filename[FILENAME_SIZE];
   int choice;
 
   while (1) {
     printMenu();
-    if (scanf("%d", &choice) != 1)
+    if (scanf("%d", &choice) != 1) {
+      printf("Invalid input. Exiting...\n");
       break;
-    getchar(); // очистка символа новой строки
+    }
+    getchar();
 
-    if (choice == 1) {
+    switch (choice) {
+    case 1:
       printDatabase(&db);
-    } else if (choice == 2) {
+      break;
+    case 2: {
       Record rec;
       printf("Enter ID (integer): ");
       scanf("%d", &rec.id);
       getchar();
       printf("Enter Name (max %d characters): ", NAME_SIZE - 1);
-      fgets(rec.name, NAME_SIZE, stdin);
-      // Удаление символа новой строки, если есть
-      char *p = rec.name;
-      while (*p) {
-        if (*p == '\n') {
-          *p = '\0';
-          break;
-        }
-        p++;
-      }
+      readLine(rec.name, NAME_SIZE);
       printf("Enter Value (floating point): ");
       scanf("%lf", &rec.value);
       getchar();
       addRecord(&db, &rec);
-    } else if (choice == 3) {
+      break;
+    }
+    case 3: {
       size_t index;
       printf("Enter index to delete: ");
       scanf("%zu", &index);
       getchar();
       deleteRecord(&db, index);
-    } else if (choice == 4) {
+      break;
+    }
+    case 4:
       printf("Enter filename to save: ");
-      fgets(filename, sizeof(filename), stdin);
-      filename[strcspn(filename, "\n")] = '\0';
+      readLine(filename, FILENAME_SIZE);
       if (saveDatabase(&db, filename))
         printf("Database saved successfully.\n");
-    } else if (choice == 5) {
+      break;
+    case 5:
       printf("Enter filename to load: ");
-      fgets(filename, sizeof(filename), stdin);
-      filename[strcspn(filename, "\n")] = '\0';
+      readLine(filename, FILENAME_SIZE);
       freeDatabase(&db);
       initDatabase(&db);
       if (loadDatabase(&db, filename))
         printf("Database loaded successfully.\n");
-    } else if (choice == 6) {
+      break;
+    case 6: {
       int field, direction;
       printf("Sort by field (1 - ID, 2 - Name, 3 - Value): ");
       scanf("%d", &field);
@@ -80,13 +88,12 @@ int main(int argc, char *argv[]) {
       getchar();
       sortDatabase(&db, field, direction);
       printf("Database sorted.\n");
-      /* } else if (choice == 7) {
-         displayBarChart(&db, 3);
-       } else if (choice == 8) {
-         displayPieChart(&db, 3); */
-    } else if (choice == 9) {
       break;
-    } else {
+    }
+    case 9:
+      freeDatabase(&db);
+      return 0;
+    default:
       printf("Invalid option.\n");
     }
   }

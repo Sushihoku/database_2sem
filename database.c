@@ -25,7 +25,7 @@ void printDatabase(const Database *db) {
   printf("Index | ID   | Name                         | Value\n");
   printf("--------------------------------------------------------\n");
   for (size_t i = 0; i < db->size; i++) {
-    Record *r = db->records + i; // арифметика указателей
+    Record *r = db->records + i;
     printf("%5zu | %4d | %-28s | %lf\n", i, r->id, r->name, r->value);
   }
 }
@@ -125,16 +125,31 @@ static int compareByValueDesc(const void *a, const void *b) {
   ascending: 1 для по возрастанию, 0 для убывания.
 */
 void sortDatabase(Database *db, int field, int ascending) {
-  int (*cmp)(const void *, const void *) = NULL;
-  if (field == 1) {
+  int (*cmp)(const void *, const void *);
+  switch (field) {
+  case 1:
     cmp = ascending ? compareByIDAsc : compareByIDDesc;
-  } else if (field == 2) {
+    break;
+  case 2:
     cmp = ascending ? compareByNameAsc : compareByNameDesc;
-  } else if (field == 3) {
+    break;
+  case 3:
     cmp = ascending ? compareByValueAsc : compareByValueDesc;
-  } else {
+    break;
+  default:
     printf("Invalid field for sorting.\n");
     return;
   }
-  qsort(db->records, db->size, sizeof(Record), cmp);
+
+  for (size_t i = 0; i < db->size - 1; i++) {
+    for (size_t j = 0; j < db->size - i - 1; j++) {
+      Record *r1 = db->records + j;
+      Record *r2 = db->records + j + 1;
+      if (cmp(r1, r2) > 0) {
+        Record temp = *r1;
+        *r1 = *r2;
+        *r2 = temp;
+      }
+    }
+  }
 }
