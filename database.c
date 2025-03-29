@@ -34,7 +34,13 @@ void printDatabase(const Database *db) {
 void addRecord(Database *db, const Record *rec) {
   if (db->size == db->capacity) {
     db->capacity *= 2;
-    db->records = (Record *)realloc(db->records, db->capacity * sizeof(Record));
+    Record *tmp = (Record *)realloc(db->records, db->capacity * sizeof(Record));
+    if (!tmp) {
+      free(db->records);
+      perror("Ошибка выделения памяти");
+      exit(EXIT_FAILURE);
+    }
+    db->records = tmp;
   }
   *(db->records + db->size) = *rec;
   db->size++;
